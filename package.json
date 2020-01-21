@@ -1,0 +1,33 @@
+{
+  "name": "jellyfin-js-api",
+  "version": "1.0.0",
+  "description": "JS API for Jellyfin",
+  "main": "dist/apiclient.js",
+  "module": "dist/apiclient.esm.js",
+  "dependencies": {},
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^11.0.1",
+    "@rollup/plugin-node-resolve": "^7.0.0",
+    "rollup": "^1.29.0"
+  },
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "pretest": "npm run build"
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mwamp/jellyfin-js-api.git"
+  },
+  "keywords": [
+    "jellyfin"
+  ],
+  "author": "",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/mwamp/jellyfin-js-api/issues"
+  }
+}
