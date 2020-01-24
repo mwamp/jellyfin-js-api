@@ -2,8 +2,8 @@
   "name": "jellyfin-js-api",
   "version": "1.0.0",
   "description": "JS API for Jellyfin",
-  "main": "dist/apiclient.js",
-  "module": "dist/apiclient.esm.js",
+  "main": "dist/jellyfin-js-api.js",
+  "module": "dist/jellyfin-js-api.esm.js",
   "dependencies": {},
   "devDependencies": {
     "@rollup/plugin-commonjs": "^11.0.1",

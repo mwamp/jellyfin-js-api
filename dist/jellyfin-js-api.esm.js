@@ -1,18 +1,63 @@
-import './events'
-import "./appStorage"
+function onCachePutFail(e) {
+    console.log(e);
+}
 
-"use strict";
+function updateCache(instance) {
+    if (instance.cache) {
+        instance.cache.put("data", new Response(JSON.stringify(instance.localData))).catch(onCachePutFail);
+    }
+}
+
+function onCacheOpened(result) {
+    this.cache = result;
+    this.localData = {};
+}
+
+function MyStore() {
+
+    this.setItem = function(name, value) {
+        localStorage.setItem(name, value);
+
+        if (this.localData && this.localData[name] !== value) {
+            this.localData[name] = value;
+            updateCache(this);
+        }
+    };
+
+    this.getItem = function(name) {
+        return localStorage.getItem(name);
+    };
+
+    this.removeItem = function(name) {
+        localStorage.removeItem(name);
+
+        if (this.localData) {
+            delete this.localData[name];
+            updateCache(this);
+        }
+    };
+
+    try {
+        if (self.caches) {
+            self.caches.open("embydata").then(onCacheOpened.bind(this));
+        }
+    } catch (err) {
+        console.log("Error opening cache: " + err);
+    }
+}
+
+new MyStore;
 
 function redetectBitrate(instance) {
-    stopBitrateDetection(instance), instance.accessToken() && !1 !== instance.enableAutomaticBitrateDetection && setTimeout(redetectBitrateInternal.bind(instance), 6e3)
+    stopBitrateDetection(instance), instance.accessToken() && !1 !== instance.enableAutomaticBitrateDetection && setTimeout(redetectBitrateInternal.bind(instance), 6e3);
 }
 
 function redetectBitrateInternal() {
-    this.accessToken() && this.detectBitrate()
+    this.accessToken() && this.detectBitrate();
 }
 
 function stopBitrateDetection(instance) {
-    instance.detectTimeout && clearTimeout(instance.detectTimeout)
+    instance.detectTimeout && clearTimeout(instance.detectTimeout);
 }
 
 function replaceAll(originalString, strReplace, strWith) {
@@ -25,14 +70,14 @@ function onFetchFail(instance, url, response) {
         url: url,
         status: response.status,
         errorCode: response.headers ? response.headers.get("X-Application-Error-Code") : null
-    }])
+    }]);
 }
 
 function paramsToString(params) {
     var values = [];
     for (var key in params) {
         var value = params[key];
-        null !== value && void 0 !== value && "" !== value && values.push(encodeURIComponent(key) + "=" + encodeURIComponent(value))
+        null !== value && void 0 !== value && "" !== value && values.push(encodeURIComponent(key) + "=" + encodeURIComponent(value));
     }
     return values.join("&")
 }
@@ -41,10 +86,10 @@ function fetchWithTimeout(url, options, timeoutMs) {
     return new Promise(function(resolve, reject) {
         var timeout = setTimeout(reject, timeoutMs);
         options = options || {}, options.credentials = "same-origin", fetch(url, options).then(function(response) {
-            clearTimeout(timeout), resolve(response)
+            clearTimeout(timeout), resolve(response);
         }, function(error) {
-            clearTimeout(timeout), reject(error)
-        })
+            clearTimeout(timeout), reject(error);
+        });
     })
 }
 
@@ -62,11 +107,11 @@ function getFetchPromise(request) {
 
 function ApiClient(serverAddress, appName, appVersion, deviceName, deviceId, devicePixelRatio) {
     if (!serverAddress) throw new Error("Must supply a serverAddress");
-    console.log("ApiClient serverAddress: " + serverAddress), console.log("ApiClient appName: " + appName), console.log("ApiClient appVersion: " + appVersion), console.log("ApiClient deviceName: " + deviceName), console.log("ApiClient deviceId: " + deviceId), this._serverInfo = {}, this._serverAddress = serverAddress, this._deviceId = deviceId, this._deviceName = deviceName, this._appName = appName, this._appVersion = appVersion, this._devicePixelRatio = devicePixelRatio
+    console.log("ApiClient serverAddress: " + serverAddress), console.log("ApiClient appName: " + appName), console.log("ApiClient appVersion: " + appVersion), console.log("ApiClient deviceName: " + deviceName), console.log("ApiClient deviceId: " + deviceId), this._serverInfo = {}, this._serverAddress = serverAddress, this._deviceId = deviceId, this._deviceName = deviceName, this._appName = appName, this._appVersion = appVersion, this._devicePixelRatio = devicePixelRatio;
 }
 
 function setSavedEndpointInfo(instance, info) {
-    instance._endPointInfo = info
+    instance._endPointInfo = info;
 }
 
 function getTryConnectPromise(instance, url, state, resolve, reject) {
@@ -74,10 +119,10 @@ function getTryConnectPromise(instance, url, state, resolve, reject) {
         method: "GET",
         accept: "application/json"
     }, 15e3).then(function() {
-        state.resolved || (state.resolved = !0, console.log("Reconnect succeeded to " + url), instance.serverAddress(url), resolve())
+        state.resolved || (state.resolved = !0, console.log("Reconnect succeeded to " + url), instance.serverAddress(url), resolve());
     }, function() {
-        state.resolved || (console.log("Reconnect failed to " + url), ++state.rejects >= state.numAddresses && reject())
-    })
+        state.resolved || (console.log("Reconnect failed to " + url), ++state.rejects >= state.numAddresses && reject());
+    });
 }
 
 function tryReconnectInternal(instance) {
@@ -97,9 +142,9 @@ function tryReconnectInternal(instance) {
         var state = {};
         state.numAddresses = addresses.length, state.rejects = 0, addresses.map(function(url) {
             setTimeout(function() {
-                state.resolved || getTryConnectPromise(instance, url.url, state, resolve, reject)
-            }, url.timeout)
-        })
+                state.resolved || getTryConnectPromise(instance, url.url, state, resolve, reject);
+            }, url.timeout);
+        });
     })
 }
 
@@ -107,8 +152,8 @@ function tryReconnect(instance, retryCount) {
     return retryCount = retryCount || 0, retryCount >= 20 ? Promise.reject() : tryReconnectInternal(instance).catch(function(err) {
         return console.log("error in tryReconnectInternal: " + (err || "")), new Promise(function(resolve, reject) {
             setTimeout(function() {
-                tryReconnect(instance, retryCount + 1).then(resolve, reject)
-            }, 500)
+                tryReconnect(instance, retryCount + 1).then(resolve, reject);
+            }, 500);
         })
     })
 }
@@ -122,39 +167,39 @@ function getCachedUser(instance, userId) {
 
 function onWebSocketMessage(msg) {
     var instance = this;
-    msg = JSON.parse(msg.data), onMessageReceivedInternal(instance, msg)
+    msg = JSON.parse(msg.data), onMessageReceivedInternal(instance, msg);
 }
 
 function onMessageReceivedInternal(instance, msg) {
     var messageId = msg.MessageId;
     if (messageId) {
         if (messageIdsReceived[messageId]) return;
-        messageIdsReceived[messageId] = !0
+        messageIdsReceived[messageId] = !0;
     }
     if ("UserDeleted" === msg.MessageType) instance._currentUser = null;
     else if ("UserUpdated" === msg.MessageType || "UserConfigurationUpdated" === msg.MessageType) {
         var user = msg.Data;
-        user.Id === instance.getCurrentUserId() && (instance._currentUser = null)
+        user.Id === instance.getCurrentUserId() && (instance._currentUser = null);
     }
-    events.trigger(instance, "message", [msg])
+    events.trigger(instance, "message", [msg]);
 }
 
 function onWebSocketOpen() {
     var instance = this;
-    console.log("web socket connection opened"), events.trigger(instance, "websocketopen")
+    console.log("web socket connection opened"), events.trigger(instance, "websocketopen");
 }
 
 function onWebSocketError() {
     var instance = this;
-    events.trigger(instance, "websocketerror")
+    events.trigger(instance, "websocketerror");
 }
 
 function setSocketOnClose(apiClient, socket) {
     socket.onclose = function() {
         console.log("web socket closed"), apiClient._webSocket === socket && (console.log("nulling out web socket"), apiClient._webSocket = null), setTimeout(function() {
-            events.trigger(apiClient, "websocketclose")
-        }, 0)
-    }
+            events.trigger(apiClient, "websocketclose");
+        }, 0);
+    };
 }
 
 function normalizeReturnBitrate(instance, bitrate) {
@@ -162,7 +207,7 @@ function normalizeReturnBitrate(instance, bitrate) {
     var result = Math.round(.7 * bitrate);
     if (instance.getMaxBandwidth) {
         var maxRate = instance.getMaxBandwidth();
-        maxRate && (result = Math.min(result, maxRate))
+        maxRate && (result = Math.min(result, maxRate));
     }
     return instance.lastDetectedBitrate = result, instance.lastDetectedBitrateTime = (new Date).getTime(), result
 }
@@ -200,7 +245,7 @@ function getRemoteImagePrefix(instance, options) {
 
 function normalizeImageOptions(instance, options) {
     var ratio = instance._devicePixelRatio || 1;
-    ratio && (options.minScale && (ratio = Math.max(options.minScale, ratio)), options.width && (options.width = Math.round(options.width * ratio)), options.height && (options.height = Math.round(options.height * ratio)), options.maxWidth && (options.maxWidth = Math.round(options.maxWidth * ratio)), options.maxHeight && (options.maxHeight = Math.round(options.maxHeight * ratio))), options.quality = options.quality || instance.getDefaultImageQuality(options.type), instance.normalizeImageOptions && instance.normalizeImageOptions(options)
+    ratio && (options.minScale && (ratio = Math.max(options.minScale, ratio)), options.width && (options.width = Math.round(options.width * ratio)), options.height && (options.height = Math.round(options.height * ratio)), options.maxWidth && (options.maxWidth = Math.round(options.maxWidth * ratio)), options.maxHeight && (options.maxHeight = Math.round(options.maxHeight * ratio))), options.quality = options.quality || instance.getDefaultImageQuality(options.type), instance.normalizeImageOptions && instance.normalizeImageOptions(options);
 }
 
 function compareVersions(a, b) {
@@ -222,7 +267,7 @@ ApiClient.prototype.appName = function() {
         values = [];
     if (appName && values.push('Client="' + appName + '"'), this._deviceName && values.push('Device="' + this._deviceName + '"'), this._deviceId && values.push('DeviceId="' + this._deviceId + '"'), this._appVersion && values.push('Version="' + this._appVersion + '"'), accessToken && values.push('Token="' + accessToken + '"'), values.length) {
         var auth = "MediaBrowser " + values.join(", ");
-        headers["X-Emby-Authorization"] = auth
+        headers["X-Emby-Authorization"] = auth;
     }
 }, ApiClient.prototype.appVersion = function() {
     return this._appVersion
@@ -234,11 +279,11 @@ ApiClient.prototype.appName = function() {
     if (null != val) {
         if (0 !== val.toLowerCase().indexOf("http")) throw new Error("Invalid url: " + val);
         var changed = val !== this._serverAddress;
-        this._serverAddress = val, this.onNetworkChange(), changed && events.trigger(this, "serveraddresschanged")
+        this._serverAddress = val, this.onNetworkChange(), changed && events.trigger(this, "serveraddresschanged");
     }
     return this._serverAddress
 }, ApiClient.prototype.onNetworkChange = function() {
-    this.lastDetectedBitrate = 0, this.lastDetectedBitrateTime = 0, setSavedEndpointInfo(this, null), redetectBitrate(this)
+    this.lastDetectedBitrate = 0, this.lastDetectedBitrateTime = 0, setSavedEndpointInfo(this, null), redetectBitrate(this);
 }, ApiClient.prototype.getUrl = function(name, params, serverAddress) {
     if (!name) throw new Error("Url name cannot be empty");
     var url = serverAddress || this._serverAddress;
@@ -273,7 +318,7 @@ ApiClient.prototype.appName = function() {
     }
     return this.fetchWithFailover(request, !0)
 }, ApiClient.prototype.setAuthenticationInfo = function(accessKey, userId) {
-    this._currentUser = null, this._serverInfo.AccessToken = accessKey, this._serverInfo.UserId = userId, redetectBitrate(this)
+    this._currentUser = null, this._serverInfo.AccessToken = accessKey, this._serverInfo.UserId = userId, redetectBitrate(this);
 }, ApiClient.prototype.serverInfo = function(info) {
     return info && (this._serverInfo = info), this._serverInfo
 }, ApiClient.prototype.getCurrentUserId = function() {
@@ -305,8 +350,8 @@ ApiClient.prototype.appName = function() {
 }, ApiClient.prototype.logout = function() {
     stopBitrateDetection(this), this.closeWebSocket();
     var done = function() {
-        appStorage.removeItem("user-" + this._currentUser.Id + "-" + this._currentUser.ServerId)
-        this.setAuthenticationInfo(null, null)
+        appStorage.removeItem("user-" + this._currentUser.Id + "-" + this._currentUser.ServerId);
+        this.setAuthenticationInfo(null, null);
     }.bind(this);
     if (this.accessToken()) {
         var url = this.getUrl("Sessions/Logout");
@@ -333,16 +378,16 @@ ApiClient.prototype.appName = function() {
             contentType: "application/json"
         }).then(function(result) {
             var afterOnAuthenticated = function() {
-                redetectBitrate(instance), resolve(result)
+                redetectBitrate(instance), resolve(result);
             };
-            instance.onAuthenticated ? instance.onAuthenticated(instance, result).then(afterOnAuthenticated) : afterOnAuthenticated()
-        }, reject)
+            instance.onAuthenticated ? instance.onAuthenticated(instance, result).then(afterOnAuthenticated) : afterOnAuthenticated();
+        }, reject);
     })
 }, ApiClient.prototype.ensureWebSocket = function() {
     if (!this.isWebSocketOpenOrConnecting() && this.isWebSocketSupported()) try {
-        this.openWebSocket()
+        this.openWebSocket();
     } catch (err) {
-        console.log("Error opening web socket: " + err)
+        console.log("Error opening web socket: " + err);
     }
 };
 var messageIdsReceived = {};
@@ -352,18 +397,18 @@ ApiClient.prototype.openWebSocket = function() {
     var url = this.getUrl("socket");
     url = replaceAll(url, "emby/socket", "embywebsocket"), url = replaceAll(url, "https:", "wss:"), url = replaceAll(url, "http:", "ws:"), url += "?api_key=" + accessToken, url += "&deviceId=" + this.deviceId(), console.log("opening web socket with url: " + url);
     var webSocket = new WebSocket(url);
-    webSocket.onmessage = onWebSocketMessage.bind(this), webSocket.onopen = onWebSocketOpen.bind(this), webSocket.onerror = onWebSocketError.bind(this), setSocketOnClose(this, webSocket), this._webSocket = webSocket
+    webSocket.onmessage = onWebSocketMessage.bind(this), webSocket.onopen = onWebSocketOpen.bind(this), webSocket.onerror = onWebSocketError.bind(this), setSocketOnClose(this, webSocket), this._webSocket = webSocket;
 }, ApiClient.prototype.closeWebSocket = function() {
     var socket = this._webSocket;
-    socket && socket.readyState === WebSocket.OPEN && socket.close()
+    socket && socket.readyState === WebSocket.OPEN && socket.close();
 }, ApiClient.prototype.sendWebSocketMessage = function(name, data) {
     console.log("Sending web socket message: " + name);
     var msg = {
         MessageType: name
     };
-    data && (msg.Data = data), msg = JSON.stringify(msg), this._webSocket.send(msg)
+    data && (msg.Data = data), msg = JSON.stringify(msg), this._webSocket.send(msg);
 }, ApiClient.prototype.sendMessage = function(name, data) {
-    this.isWebSocketOpen() && this.sendWebSocketMessage(name, data)
+    this.isWebSocketOpen() && this.sendWebSocketMessage(name, data);
 }, ApiClient.prototype.isMessageChannelOpen = function() {
     return this.isWebSocketOpen()
 }, ApiClient.prototype.isWebSocketOpen = function() {
@@ -389,7 +434,7 @@ ApiClient.prototype.openWebSocket = function() {
 }, ApiClient.prototype.updateServerInfo = function(server, serverUrl) {
     if (null == server) throw new Error("server cannot be null");
     if (this.serverInfo(server), !serverUrl) throw new Error("serverUrl cannot be null. serverInfo: " + JSON.stringify(server));
-    console.log("Setting server address to " + serverUrl), this.serverAddress(serverUrl)
+    console.log("Setting server address to " + serverUrl), this.serverAddress(serverUrl);
 }, ApiClient.prototype.isWebSocketSupported = function() {
     try {
         return null != WebSocket
@@ -397,7 +442,7 @@ ApiClient.prototype.openWebSocket = function() {
         return !1
     }
 }, ApiClient.prototype.clearAuthenticationInfo = function() {
-    this.setAuthenticationInfo(null, null)
+    this.setAuthenticationInfo(null, null);
 }, ApiClient.prototype.encodeName = function(name) {
     name = name.split("/").join("-"), name = name.split("&").join("-"), name = name.split("?").join("-");
     var val = paramsToString({
@@ -1008,9 +1053,9 @@ ApiClient.prototype.openWebSocket = function() {
     return new Promise(function(resolve, reject) {
         var reader = new FileReader;
         reader.onerror = function() {
-            reject()
+            reject();
         }, reader.onabort = function() {
-            reject()
+            reject();
         }, reader.onload = function(e) {
             var data = e.target.result.split(",")[1],
                 url = instance.getUrl("Users/" + userId + "/Images/" + imageType);
@@ -1019,8 +1064,8 @@ ApiClient.prototype.openWebSocket = function() {
                 url: url,
                 data: data,
                 contentType: "image/" + file.name.substring(file.name.lastIndexOf(".") + 1)
-            }).then(resolve, reject)
-        }, reader.readAsDataURL(file)
+            }).then(resolve, reject);
+        }, reader.readAsDataURL(file);
     })
 }, ApiClient.prototype.uploadItemImage = function(itemId, imageType, file) {
     if (!itemId) throw new Error("null itemId");
@@ -1033,9 +1078,9 @@ ApiClient.prototype.openWebSocket = function() {
     return new Promise(function(resolve, reject) {
         var reader = new FileReader;
         reader.onerror = function() {
-            reject()
+            reject();
         }, reader.onabort = function() {
-            reject()
+            reject();
         }, reader.onload = function(e) {
             var data = e.target.result.split(",")[1];
             instance.ajax({
@@ -1043,8 +1088,8 @@ ApiClient.prototype.openWebSocket = function() {
                 url: url,
                 data: data,
                 contentType: "image/" + file.name.substring(file.name.lastIndexOf(".") + 1)
-            }).then(resolve, reject)
-        }, reader.readAsDataURL(file)
+            }).then(resolve, reject);
+        }, reader.readAsDataURL(file);
     })
 }, ApiClient.prototype.getInstalledPlugins = function() {
     var options = {},
@@ -1327,7 +1372,7 @@ ApiClient.prototype.openWebSocket = function() {
         serverId = this.serverId();
     return this.getJSON(url).then(function(result) {
         return result.SearchHints.forEach(function(i) {
-            i.ServerId = serverId
+            i.ServerId = serverId;
         }), result
     })
 }, ApiClient.prototype.getSpecialFeatures = function(userId, itemId) {
@@ -1417,7 +1462,7 @@ ApiClient.prototype.openWebSocket = function() {
             var expectedReportTicks = 1e4 * msSinceLastReport + (this.lastPlaybackProgressReportTicks || 0);
             if (Math.abs((newPositionTicks || 0) - expectedReportTicks) < 5e7) return Promise.resolve()
         }
-        this.lastPlaybackProgressReport = now
+        this.lastPlaybackProgressReport = now;
     } else this.lastPlaybackProgressReport = 0;
     this.lastPlaybackProgressReportTicks = newPositionTicks;
     var url = this.getUrl("Sessions/Playing/Progress");
@@ -1538,14 +1583,1052 @@ ApiClient.prototype.openWebSocket = function() {
 }, ApiClient.prototype.getFilters = function(options) {
     return this.getJSON(this.getUrl("Items/Filters2", options))
 }, ApiClient.prototype.setSystemInfo = function(info) {
-    this._serverVersion = info.Version
+    this._serverVersion = info.Version;
 }, ApiClient.prototype.serverVersion = function() {
     return this._serverVersion
 }, ApiClient.prototype.isMinServerVersion = function(version) {
     var serverVersion = this.serverVersion();
     return !!serverVersion && compareVersions(serverVersion, version) >= 0
 }, ApiClient.prototype.handleMessageReceived = function(msg) {
-    onMessageReceivedInternal(this, msg)
+    onMessageReceivedInternal(this, msg);
+};
+
+/**
+THere used to be a conditionnal here, obviously it doesn't work with the import/export syntax
+We shoud make a build fix if we need it? (eg separate build process?)
+*/
+//if ("cordova" !== window.appMode && "android" !== window.appMode) {
+//    export  ApiClient;
+//}
+
+
+function isLocalId(str) {
+    return startsWith(str, localPrefix)
 }
 
-export default ApiClient
+function isLocalViewId(str) {
+    return startsWith(str, localViewPrefix)
+}
+
+function isTopLevelLocalViewId(str) {
+    return "localview" === str
+}
+
+function stripLocalPrefix(str) {
+    var res = stripStart(str, localPrefix);
+    return res = stripStart(res, localViewPrefix)
+}
+
+function startsWith(str, find) {
+    return !!(str && find && str.length > find.length && 0 === str.indexOf(find))
+}
+
+function stripStart(str, find) {
+    return startsWith(str, find) ? str.substr(find.length) : str
+}
+
+function createEmptyList() {
+    return {
+        Items: [],
+        TotalRecordCount: 0
+    }
+}
+
+function convertGuidToLocal(guid) {
+    return guid ? isLocalId(guid) ? guid : "local:" + guid : null
+}
+
+function adjustGuidProperties(downloadedItem) {
+    downloadedItem.Id = convertGuidToLocal(downloadedItem.Id), downloadedItem.SeriesId = convertGuidToLocal(downloadedItem.SeriesId), downloadedItem.SeasonId = convertGuidToLocal(downloadedItem.SeasonId), downloadedItem.AlbumId = convertGuidToLocal(downloadedItem.AlbumId), downloadedItem.ParentId = convertGuidToLocal(downloadedItem.ParentId), downloadedItem.ParentThumbItemId = convertGuidToLocal(downloadedItem.ParentThumbItemId), downloadedItem.ParentPrimaryImageItemId = convertGuidToLocal(downloadedItem.ParentPrimaryImageItemId), downloadedItem.PrimaryImageItemId = convertGuidToLocal(downloadedItem.PrimaryImageItemId), downloadedItem.ParentLogoItemId = convertGuidToLocal(downloadedItem.ParentLogoItemId), downloadedItem.ParentBackdropItemId = convertGuidToLocal(downloadedItem.ParentBackdropItemId), downloadedItem.ParentBackdropImageTags = null;
+}
+
+function getLocalView(instance, serverId, userId) {
+    return instance.getLocalFolders(serverId, userId).then(function(views) {
+        var localView = null;
+        return views.length > 0 && (localView = {
+            Name: instance.downloadsTitleText || "Downloads",
+            ServerId: serverId,
+            Id: "localview",
+            Type: "localview",
+            IsFolder: !0
+        }), Promise.resolve(localView)
+    })
+}
+
+function ApiClientEx(serverAddress, clientName, applicationVersion, deviceName, deviceId, devicePixelRatio) {
+    ApiClient.call(this, serverAddress, clientName, applicationVersion, deviceName, deviceId, devicePixelRatio);
+}
+var localPrefix = "local:",
+    localViewPrefix = "localview:";
+Object.assign(ApiClientEx.prototype, ApiClient.prototype), ApiClientEx.prototype.getPlaybackInfo = function(itemId, options, deviceProfile) {
+    var onFailure = function() {
+        return ApiClient.prototype.getPlaybackInfo.call(instance, itemId, options, deviceProfile)
+    };
+    if (isLocalId(itemId)) return localassetmanager.getLocalItem(this.serverId(), stripLocalPrefix(itemId)).then(function(item) {
+        return {
+            MediaSources: item.Item.MediaSources.map(function(m) {
+                return m.SupportsDirectPlay = !0, m.SupportsDirectStream = !1, m.SupportsTranscoding = !1, m.IsLocal = !0, m
+            })
+        }
+    }, onFailure);
+    var instance = this;
+    return localassetmanager.getLocalItem(this.serverId(), itemId).then(function(item) {
+        if (item) {
+            var mediaSources = item.Item.MediaSources.map(function(m) {
+                return m.SupportsDirectPlay = !0, m.SupportsDirectStream = !1, m.SupportsTranscoding = !1, m.IsLocal = !0, m
+            });
+            return localassetmanager.fileExists(item.LocalPath).then(function(exists) {
+                if (exists) {
+                    var res = {
+                        MediaSources: mediaSources
+                    };
+                    return Promise.resolve(res)
+                }
+                return ApiClient.prototype.getPlaybackInfo.call(instance, itemId, options, deviceProfile)
+            }, onFailure)
+        }
+        return ApiClient.prototype.getPlaybackInfo.call(instance, itemId, options, deviceProfile)
+    }, onFailure)
+}, ApiClientEx.prototype.getItems = function(userId, options) {
+    var i, serverInfo = this.serverInfo();
+    if (serverInfo && "localview" === options.ParentId) return this.getLocalFolders(serverInfo.Id, userId).then(function(items) {
+        var result = {
+            Items: items,
+            TotalRecordCount: items.length
+        };
+        return Promise.resolve(result)
+    });
+    if (serverInfo && options && (isLocalId(options.ParentId) || isLocalId(options.SeriesId) || isLocalId(options.SeasonId) || isLocalViewId(options.ParentId) || isLocalId(options.AlbumIds))) return localassetmanager.getViewItems(serverInfo.Id, userId, options).then(function(items) {
+        items.forEach(function(item) {
+            adjustGuidProperties(item);
+        });
+        var result = {
+            Items: items,
+            TotalRecordCount: items.length
+        };
+        return Promise.resolve(result)
+    });
+    if (options && options.ExcludeItemIds && options.ExcludeItemIds.length) {
+        var exItems = options.ExcludeItemIds.split(",");
+        for (i = 0; i < exItems.length; i++)
+            if (isLocalId(exItems[i])) return Promise.resolve(createEmptyList())
+    } else if (options && options.Ids && options.Ids.length) {
+        var ids = options.Ids.split(","),
+            hasLocal = !1;
+        for (i = 0; i < ids.length; i++) isLocalId(ids[i]) && (hasLocal = !0);
+        if (hasLocal) return localassetmanager.getItemsFromIds(serverInfo.Id, ids).then(function(items) {
+            items.forEach(function(item) {
+                adjustGuidProperties(item);
+            });
+            var result = {
+                Items: items,
+                TotalRecordCount: items.length
+            };
+            return Promise.resolve(result)
+        })
+    }
+    return ApiClient.prototype.getItems.call(this, userId, options)
+}, ApiClientEx.prototype.getUserViews = function(options, userId) {
+    var instance = this;
+    options = options || {};
+    var basePromise = ApiClient.prototype.getUserViews.call(instance, options, userId);
+    return options.enableLocalView ? basePromise.then(function(result) {
+        var serverInfo = instance.serverInfo();
+        return serverInfo ? getLocalView(instance, serverInfo.Id, userId).then(function(localView) {
+            return localView && (result.Items.push(localView), result.TotalRecordCount++), Promise.resolve(result)
+        }) : Promise.resolve(result)
+    }) : basePromise
+}, ApiClientEx.prototype.getItem = function(userId, itemId) {
+    if (!itemId) throw new Error("null itemId");
+    itemId && (itemId = itemId.toString());
+    var serverInfo;
+    return isTopLevelLocalViewId(itemId) && (serverInfo = this.serverInfo()) ? getLocalView(this, serverInfo.Id, userId) : isLocalViewId(itemId) && (serverInfo = this.serverInfo()) ? this.getLocalFolders(serverInfo.Id, userId).then(function(items) {
+        var views = items.filter(function(item) {
+            return item.Id === itemId
+        });
+        return views.length > 0 ? Promise.resolve(views[0]) : Promise.reject()
+    }) : isLocalId(itemId) && (serverInfo = this.serverInfo()) ? localassetmanager.getLocalItem(serverInfo.Id, stripLocalPrefix(itemId)).then(function(item) {
+        return adjustGuidProperties(item.Item), Promise.resolve(item.Item)
+    }) : ApiClient.prototype.getItem.call(this, userId, itemId)
+}, ApiClientEx.prototype.getLocalFolders = function(userId) {
+    var serverInfo = this.serverInfo();
+    return userId = userId || serverInfo.UserId, localassetmanager.getViews(serverInfo.Id, userId)
+}, ApiClientEx.prototype.getNextUpEpisodes = function(options) {
+    return options.SeriesId && isLocalId(options.SeriesId) ? Promise.resolve(createEmptyList()) : ApiClient.prototype.getNextUpEpisodes.call(this, options)
+}, ApiClientEx.prototype.getSeasons = function(itemId, options) {
+    return isLocalId(itemId) ? (options.SeriesId = itemId, options.IncludeItemTypes = "Season", options.SortBy = "SortName", this.getItems(this.getCurrentUserId(), options)) : ApiClient.prototype.getSeasons.call(this, itemId, options)
+}, ApiClientEx.prototype.getEpisodes = function(itemId, options) {
+    return isLocalId(options.SeasonId) || isLocalId(options.seasonId) ? (options.SeriesId = itemId, options.IncludeItemTypes = "Episode", options.SortBy = "SortName", this.getItems(this.getCurrentUserId(), options)) : isLocalId(itemId) ? (options.SeriesId = itemId, options.IncludeItemTypes = "Episode", options.SortBy = "SortName", this.getItems(this.getCurrentUserId(), options)) : ApiClient.prototype.getEpisodes.call(this, itemId, options)
+}, ApiClientEx.prototype.getLatestOfflineItems = function(options) {
+    options.SortBy = "DateCreated", options.SortOrder = "Descending";
+    var serverInfo = this.serverInfo();
+    return serverInfo ? localassetmanager.getViewItems(serverInfo.Id, null, options).then(function(items) {
+        return items.forEach(function(item) {
+            adjustGuidProperties(item);
+        }), Promise.resolve(items)
+    }) : Promise.resolve([])
+}, ApiClientEx.prototype.getThemeMedia = function(userId, itemId, inherit) {
+    return isLocalViewId(itemId) || isLocalId(itemId) || isTopLevelLocalViewId(itemId) ? Promise.reject() : ApiClient.prototype.getThemeMedia.call(this, userId, itemId, inherit)
+}, ApiClientEx.prototype.getSpecialFeatures = function(userId, itemId) {
+    return isLocalId(itemId) ? Promise.resolve([]) : ApiClient.prototype.getSpecialFeatures.call(this, userId, itemId)
+}, ApiClientEx.prototype.getSimilarItems = function(itemId, options) {
+    return isLocalId(itemId) ? Promise.resolve(createEmptyList()) : ApiClient.prototype.getSimilarItems.call(this, itemId, options)
+}, ApiClientEx.prototype.updateFavoriteStatus = function(userId, itemId, isFavorite) {
+    return isLocalId(itemId) ? Promise.resolve() : ApiClient.prototype.updateFavoriteStatus.call(this, userId, itemId, isFavorite)
+}, ApiClientEx.prototype.getScaledImageUrl = function(itemId, options) {
+    if (isLocalId(itemId) || options && options.itemid && isLocalId(options.itemid)) {
+        var serverInfo = this.serverInfo(),
+            id = stripLocalPrefix(itemId);
+        return localassetmanager.getImageUrl(serverInfo.Id, id, options)
+    }
+    return ApiClient.prototype.getScaledImageUrl.call(this, itemId, options)
+}, ApiClientEx.prototype.reportPlaybackStart = function(options) {
+    if (!options) throw new Error("null options");
+    return isLocalId(options.ItemId) ? Promise.resolve() : ApiClient.prototype.reportPlaybackStart.call(this, options)
+}, ApiClientEx.prototype.reportPlaybackProgress = function(options) {
+    if (!options) throw new Error("null options");
+    if (isLocalId(options.ItemId)) {
+        var serverInfo = this.serverInfo();
+        return serverInfo ? localassetmanager.getLocalItem(serverInfo.Id, stripLocalPrefix(options.ItemId)).then(function(item) {
+            var libraryItem = item.Item;
+            return "Video" === libraryItem.MediaType || "AudioBook" === libraryItem.Type ? (libraryItem.UserData = libraryItem.UserData || {}, libraryItem.UserData.PlaybackPositionTicks = options.PositionTicks, libraryItem.UserData.PlayedPercentage = Math.min(libraryItem.RunTimeTicks ? (options.PositionTicks || 0) / libraryItem.RunTimeTicks * 100 : 0, 100), localassetmanager.addOrUpdateLocalItem(item)) : Promise.resolve()
+        }) : Promise.resolve()
+    }
+    return ApiClient.prototype.reportPlaybackProgress.call(this, options)
+}, ApiClientEx.prototype.reportPlaybackStopped = function(options) {
+    if (!options) throw new Error("null options");
+    if (isLocalId(options.ItemId)) {
+        var serverInfo = this.serverInfo(),
+            action = {
+                Date: (new Date).getTime(),
+                ItemId: stripLocalPrefix(options.ItemId),
+                PositionTicks: options.PositionTicks,
+                ServerId: serverInfo.Id,
+                Type: 0,
+                UserId: this.getCurrentUserId()
+            };
+        return localassetmanager.recordUserAction(action)
+    }
+    return ApiClient.prototype.reportPlaybackStopped.call(this, options)
+}, ApiClientEx.prototype.getIntros = function(itemId) {
+    return isLocalId(itemId) ? Promise.resolve({
+        Items: [],
+        TotalRecordCount: 0
+    }) : ApiClient.prototype.getIntros.call(this, itemId)
+}, ApiClientEx.prototype.getInstantMixFromItem = function(itemId, options) {
+    return isLocalId(itemId) ? Promise.resolve({
+        Items: [],
+        TotalRecordCount: 0
+    }) : ApiClient.prototype.getInstantMixFromItem.call(this, itemId, options)
+}, ApiClientEx.prototype.getItemDownloadUrl = function(itemId) {
+    if (isLocalId(itemId)) {
+        var serverInfo = this.serverInfo();
+        if (serverInfo) return localassetmanager.getLocalItem(serverInfo.Id, stripLocalPrefix(itemId)).then(function(item) {
+            return Promise.resolve(item.LocalPath)
+        })
+    }
+    return ApiClient.prototype.getItemDownloadUrl.call(this, itemId)
+};
+
+function getServerAddress(server, mode) {
+    switch (mode) {
+        case ConnectionMode.Local:
+            return server.LocalAddress;
+
+        case ConnectionMode.Manual:
+            return server.ManualAddress;
+
+        case ConnectionMode.Remote:
+            return server.RemoteAddress;
+
+        default:
+            return server.ManualAddress || server.LocalAddress || server.RemoteAddress;
+    }
+}
+
+function paramsToString$1(params) {
+    var values = [];
+
+    for (var key in params) {
+        var value = params[key];
+
+        if (null !== value && void 0 !== value && "" !== value) {
+            values.push(encodeURIComponent(key) + "=" + encodeURIComponent(value));
+        }
+    }
+
+    return values.join("&");
+}
+
+function resolveFailure(instance, resolve) {
+    resolve({
+        State: "Unavailable",
+    });
+}
+
+function mergeServers(credentialProvider, list1, list2) {
+    for (var i = 0, length = list2.length; i < length; i++) {
+        credentialProvider.addOrUpdateServer(list1, list2[i]);
+    }
+
+    return list1;
+}
+
+function updateServerInfo(server, systemInfo) {
+    server.Name = systemInfo.ServerName;
+    if (systemInfo.Id) {
+        server.Id = systemInfo.Id;
+    }
+
+    if (systemInfo.LocalAddress) {
+        server.LocalAddress = systemInfo.LocalAddress;
+    }
+}
+
+function getEmbyServerUrl(baseUrl, handler) {
+    return baseUrl + "/" + handler;
+}
+
+function getFetchPromise$1(request) {
+    var headers = request.headers || {};
+
+    if ("json" === request.dataType) {
+        headers.accept = "application/json";
+    }
+
+    var fetchRequest = {
+        headers: headers,
+        method: request.type,
+        credentials: "same-origin"
+    };
+    var contentType = request.contentType;
+
+    if (request.data) {
+        if ("string" == typeof request.data) {
+            fetchRequest.body = request.data;
+        } else {
+            fetchRequest.body = paramsToString$1(request.data);
+            contentType = contentType || "application/x-www-form-urlencoded; charset=UTF-8";
+        }
+    }
+
+    if (contentType) {
+        headers["Content-Type"] = contentType;
+    }
+
+    if (request.timeout) {
+        return fetchWithTimeout$1(request.url, fetchRequest, request.timeout);
+    }
+
+    return fetch(request.url, fetchRequest);
+}
+
+function fetchWithTimeout$1(url, options, timeoutMs) {
+    console.log("fetchWithTimeout: timeoutMs: " + timeoutMs + ", url: " + url);
+    return new Promise(function (resolve, reject) {
+        var timeout = setTimeout(reject, timeoutMs);
+        options = options || {};
+        options.credentials = "same-origin";
+        fetch(url, options).then(function (response) {
+            clearTimeout(timeout);
+            console.log("fetchWithTimeout: succeeded connecting to url: " + url);
+            resolve(response);
+        }, function (error) {
+            clearTimeout(timeout);
+            console.log("fetchWithTimeout: timed out connecting to url: " + url);
+            reject();
+        });
+    });
+}
+
+function ajax(request) {
+    if (!request) {
+        throw new Error("Request cannot be null");
+    }
+
+    request.headers = request.headers || {};
+    console.log("ConnectionManager requesting url: " + request.url);
+    return getFetchPromise$1(request).then(function (response) {
+        console.log("ConnectionManager response status: " + response.status + ", url: " + request.url);
+
+        if (response.status < 400) {
+            if ("json" === request.dataType || "application/json" === request.headers.accept) {
+                return response.json();
+            }
+
+            return response;
+        }
+
+        return Promise.reject(response);
+    }, function (err) {
+        console.log("ConnectionManager request failed to url: " + request.url);
+        throw err;
+    });
+}
+
+function replaceAll$1(originalString, strReplace, strWith) {
+    var reg = new RegExp(strReplace, "ig");
+    return originalString.replace(reg, strWith);
+}
+
+function normalizeAddress(address) {
+    address = address.trim();
+
+    if (0 !== address.toLowerCase().indexOf("http")) {
+        address = "http://" + address;
+    }
+
+    address = replaceAll$1(address, "Http:", "http:");
+    address = replaceAll$1(address, "Https:", "https:");
+
+    return address;
+}
+
+function stringEqualsIgnoreCase(str1, str2) {
+    return (str1 || "").toLowerCase() === (str2 || "").toLowerCase();
+}
+
+function compareVersions$1(a, b) {
+    a = a.split(".");
+    b = b.split(".");
+
+    for (var i = 0, length = Math.max(a.length, b.length); i < length; i++) {
+        var aVal = parseInt(a[i] || "0");
+        var bVal = parseInt(b[i] || "0");
+
+        if (aVal < bVal) {
+            return -1;
+        }
+
+        if (aVal > bVal) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+var defaultTimeout = 20000;
+var ConnectionMode = {
+    Local: 0,
+    Remote: 1,
+    Manual: 2
+};
+
+var ConnectionManager = function (credentialProvider, appName, appVersion, deviceName, deviceId, capabilities, devicePixelRatio) {
+
+    function onAuthenticated(apiClient, result, options, saveCredentials) {
+        var credentials = credentialProvider.credentials();
+        var servers = credentials.Servers.filter(function (s) {
+            return s.Id === result.ServerId;
+        });
+        var server = servers.length ? servers[0] : apiClient.serverInfo();
+
+        if (false !== options.updateDateLastAccessed) {
+            server.DateLastAccessed = new Date().getTime();
+        }
+
+        server.Id = result.ServerId;
+
+        if (saveCredentials) {
+            server.UserId = result.User.Id;
+            server.AccessToken = result.AccessToken;
+        } else {
+            server.UserId = null;
+            server.AccessToken = null;
+        }
+
+        credentialProvider.addOrUpdateServer(credentials.Servers, server);
+        credentialProvider.credentials(credentials);
+        apiClient.enableAutomaticBitrateDetection = options.enableAutomaticBitrateDetection;
+        apiClient.serverInfo(server);
+        afterConnected(apiClient, options);
+        return onLocalUserSignIn(server, apiClient.serverAddress(), result.User);
+    }
+
+    function afterConnected(apiClient, options) {
+        options = options || {};
+
+        if (false !== options.reportCapabilities) {
+            apiClient.reportCapabilities(capabilities);
+        }
+
+        apiClient.enableAutomaticBitrateDetection = options.enableAutomaticBitrateDetection;
+
+        if (false !== options.enableWebSocket) {
+            console.log("calling apiClient.ensureWebSocket");
+            apiClient.ensureWebSocket();
+        }
+    }
+
+    function onLocalUserSignIn(server, serverUrl, user) {
+        self._getOrAddApiClient(server, serverUrl);
+
+        var promise = self.onLocalUserSignedIn ? self.onLocalUserSignedIn.call(self, user) : Promise.resolve();
+        return promise.then(function () {
+            events.trigger(self, "localusersignedin", [user]);
+        })
+    }
+
+    function validateAuthentication(server, serverUrl) {
+        return ajax({
+            type: "GET",
+            url: getEmbyServerUrl(serverUrl, "System/Info"),
+            dataType: "json",
+            headers: {
+                "X-MediaBrowser-Token": server.AccessToken
+            }
+        }).then(function (systemInfo) {
+            updateServerInfo(server, systemInfo);
+            return Promise.resolve();
+        }, function () {
+            server.UserId = null;
+            server.AccessToken = null;
+            return Promise.resolve();
+        });
+    }
+
+    function getImageUrl(localUser) {
+        if (localUser && localUser.PrimaryImageTag) {
+            return {
+                url: self.getApiClient(localUser).getUserImageUrl(localUser.Id, {
+                    tag: localUser.PrimaryImageTag,
+                    type: "Primary"
+                }),
+                supportsParams: true
+            };
+        }
+
+        return {
+            url: null,
+            supportsParams: false
+        };
+    }
+
+    function logoutOfServer(apiClient) {
+        var serverInfo = apiClient.serverInfo() || {};
+        var logoutInfo = {
+            serverId: serverInfo.Id
+        };
+        return apiClient.logout().then(function () {
+            events.trigger(self, "localusersignedout", [logoutInfo]);
+        }, function () {
+            events.trigger(self, "localusersignedout", [logoutInfo]);
+        });
+    }
+
+    function findServers() {
+        return new Promise(function (resolve, reject) {
+            var onFinish = function (foundServers) {
+                var servers = foundServers.map(function (foundServer) {
+                    var info = {
+                        Id: foundServer.Id,
+                        LocalAddress: convertEndpointAddressToManualAddress(foundServer) || foundServer.Address,
+                        Name: foundServer.Name
+                    };
+                    info.LastConnectionMode = info.ManualAddress ? ConnectionMode.Manual : ConnectionMode.Local;
+                    return info;
+                });
+                resolve(servers);
+            };
+
+            if (window.NativeShell && typeof window.NativeShell.findServers === 'function') {
+                window.NativeShell.findServers(1e3).then(onFinish, function () {
+                    onFinish([]);
+                });
+            } else {
+                resolve([]);
+            }
+        });
+    }
+
+    function convertEndpointAddressToManualAddress(info) {
+        if (info.Address && info.EndpointAddress) {
+            var address = info.EndpointAddress.split(":")[0];
+            var parts = info.Address.split(":");
+
+            if (parts.length > 1) {
+                var portString = parts[parts.length - 1];
+
+                if (!isNaN(parseInt(portString))) {
+                    address += ":" + portString;
+                }
+            }
+
+            return normalizeAddress(address);
+        }
+
+        return null;
+    }
+
+    function getTryConnectPromise(url, connectionMode, state, resolve, reject) {
+        console.log("getTryConnectPromise " + url);
+        ajax({
+            url: getEmbyServerUrl(url, "system/info/public"),
+            timeout: defaultTimeout,
+            type: "GET",
+            dataType: "json"
+        }).then(function (result) {
+            if (!state.resolved) {
+                state.resolved = true;
+                console.log("Reconnect succeeded to " + url);
+                resolve({
+                    url: url,
+                    connectionMode: connectionMode,
+                    data: result
+                });
+            }
+        }, function () {
+            if (!state.resolved) {
+                console.log("Reconnect failed to " + url);
+
+                if (++state.rejects >= state.numAddresses) {
+                    reject();
+                }
+            }
+        });
+    }
+
+    function tryReconnect(serverInfo) {
+        var addresses = [];
+        var addressesStrings = [];
+
+        if (!serverInfo.manualAddressOnly && serverInfo.LocalAddress && -1 === addressesStrings.indexOf(serverInfo.LocalAddress)) {
+            addresses.push({
+                url: serverInfo.LocalAddress,
+                mode: ConnectionMode.Local,
+                timeout: 0
+            });
+            addressesStrings.push(addresses[addresses.length - 1].url);
+        }
+
+        if (serverInfo.ManualAddress && -1 === addressesStrings.indexOf(serverInfo.ManualAddress)) {
+            addresses.push({
+                url: serverInfo.ManualAddress,
+                mode: ConnectionMode.Manual,
+                timeout: 100
+            });
+            addressesStrings.push(addresses[addresses.length - 1].url);
+        }
+
+        if (!serverInfo.manualAddressOnly && serverInfo.RemoteAddress && -1 === addressesStrings.indexOf(serverInfo.RemoteAddress)) {
+            addresses.push({
+                url: serverInfo.RemoteAddress,
+                mode: ConnectionMode.Remote,
+                timeout: 200
+            });
+            addressesStrings.push(addresses[addresses.length - 1].url);
+        }
+
+        console.log("tryReconnect: " + addressesStrings.join("|"));
+        return new Promise(function (resolve, reject) {
+            var state = {};
+            state.numAddresses = addresses.length;
+            state.rejects = 0;
+            addresses.map(function (url) {
+                setTimeout(function () {
+                    if (!state.resolved) {
+                        getTryConnectPromise(url.url, url.mode, state, resolve, reject);
+                    }
+                }, url.timeout);
+            });
+        });
+    }
+
+    function onSuccessfulConnection(server, systemInfo, connectionMode, serverUrl, options, resolve) {
+        var credentials = credentialProvider.credentials();
+        options = options || {};
+
+        afterConnectValidated(server, credentials, systemInfo, connectionMode, serverUrl, true, options, resolve);
+    }
+
+    function afterConnectValidated(server, credentials, systemInfo, connectionMode, serverUrl, verifyLocalAuthentication, options, resolve) {
+        options = options || {};
+        if (false === options.enableAutoLogin) {
+            server.UserId = null;
+            server.AccessToken = null;
+        } else if (verifyLocalAuthentication && server.AccessToken && false !== options.enableAutoLogin) {
+            return void validateAuthentication(server, serverUrl).then(function () {
+                afterConnectValidated(server, credentials, systemInfo, connectionMode, serverUrl, false, options, resolve);
+            });
+        }
+
+        updateServerInfo(server, systemInfo);
+        server.LastConnectionMode = connectionMode;
+
+        if (false !== options.updateDateLastAccessed) {
+            server.DateLastAccessed = new Date().getTime();
+        }
+
+        credentialProvider.addOrUpdateServer(credentials.Servers, server);
+        credentialProvider.credentials(credentials);
+        var result = {
+            Servers: []
+        };
+        result.ApiClient = self._getOrAddApiClient(server, serverUrl);
+        result.ApiClient.setSystemInfo(systemInfo);
+        result.State = server.AccessToken && false !== options.enableAutoLogin ? "SignedIn" : "ServerSignIn";
+        result.Servers.push(server);
+        result.ApiClient.enableAutomaticBitrateDetection = options.enableAutomaticBitrateDetection;
+        result.ApiClient.updateServerInfo(server, serverUrl);
+
+        var resolveActions = function () {
+            resolve(result);
+            events.trigger(self, "connected", [result]);
+        };
+
+        if ("SignedIn" === result.State) {
+            afterConnected(result.ApiClient, options);
+            result.ApiClient.getCurrentUser().then(function (user) {
+                onLocalUserSignIn(server, serverUrl, user).then(resolveActions, resolveActions);
+            }, resolveActions);
+        } else {
+            resolveActions();
+        }
+    }
+
+    console.log("Begin ConnectionManager constructor");
+    var self = this;
+    this._apiClients = [];
+    self._minServerVersion = "3.2.33";
+
+    self.appVersion = function () {
+        return appVersion;
+    };
+
+    self.appName = function () {
+        return appName;
+    };
+
+    self.capabilities = function () {
+        return capabilities;
+    };
+
+    self.deviceId = function () {
+        return deviceId;
+    };
+
+    self.credentialProvider = function () {
+        return credentialProvider;
+    };
+
+    self.getServerInfo = function (id) {
+        return credentialProvider.credentials().Servers.filter(function (s) {
+            return s.Id === id;
+        })[0];
+    };
+
+    self.getLastUsedServer = function () {
+        var servers = credentialProvider.credentials().Servers;
+        servers.sort(function (a, b) {
+            return (b.DateLastAccessed || 0) - (a.DateLastAccessed || 0);
+        });
+
+        if (servers.length) {
+            return servers[0];
+        }
+
+        return null;
+    };
+
+    self.addApiClient = function (apiClient) {
+        self._apiClients.push(apiClient);
+
+        var existingServers = credentialProvider.credentials().Servers.filter(function (s) {
+            return stringEqualsIgnoreCase(s.ManualAddress, apiClient.serverAddress()) || stringEqualsIgnoreCase(s.LocalAddress, apiClient.serverAddress()) || stringEqualsIgnoreCase(s.RemoteAddress, apiClient.serverAddress());
+        });
+        var existingServer = existingServers.length ? existingServers[0] : apiClient.serverInfo();
+
+        existingServer.DateLastAccessed = new Date().getTime();
+        existingServer.LastConnectionMode = ConnectionMode.Manual;
+        existingServer.ManualAddress = apiClient.serverAddress();
+        if (apiClient.manualAddressOnly) {
+            existingServer.manualAddressOnly = true;
+        }
+        apiClient.serverInfo(existingServer);
+        apiClient.onAuthenticated = function (instance, result) {
+            return onAuthenticated(instance, result, {}, true);
+        };
+        if (!existingServers.length) {
+            var credentials = credentialProvider.credentials();
+            credentials.Servers = [existingServer];
+            credentialProvider.credentials(credentials);
+        }
+
+        events.trigger(self, "apiclientcreated", [apiClient]);
+    };
+
+    self.clearData = function () {
+        console.log("connection manager clearing data");
+        var credentials = credentialProvider.credentials();
+        credentials.Servers = [];
+        credentialProvider.credentials(credentials);
+    };
+
+    self._getOrAddApiClient = function (server, serverUrl) {
+        var apiClient = self.getApiClient(server.Id);
+
+        if (!apiClient) {
+            apiClient = new apiClientFactory(serverUrl, appName, appVersion, deviceName, deviceId, devicePixelRatio);
+            self._apiClients.push(apiClient);
+            apiClient.serverInfo(server);
+            apiClient.onAuthenticated = function (instance, result) {
+                return onAuthenticated(instance, result, {}, true);
+            };
+
+            events.trigger(self, "apiclientcreated", [apiClient]);
+        }
+
+        console.log("returning instance from getOrAddApiClient");
+        return apiClient;
+    };
+
+    self.getOrCreateApiClient = function (serverId) {
+        var credentials = credentialProvider.credentials();
+        var servers = credentials.Servers.filter(function (s) {
+            return stringEqualsIgnoreCase(s.Id, serverId);
+        });
+
+        if (!servers.length) {
+            throw new Error("Server not found: " + serverId);
+        }
+
+        var server = servers[0];
+        return self._getOrAddApiClient(server, getServerAddress(server, server.LastConnectionMode));
+    };
+
+    self.user = function (apiClient) {
+        return new Promise(function (resolve, reject) {
+            function onLocalUserDone(e) {
+                if (apiClient && apiClient.getCurrentUserId()) {
+                    apiClient.getCurrentUser().then(function (u) {
+                        localUser = u;
+                        var image = getImageUrl(localUser);
+                        resolve({
+                            localUser: localUser,
+                            name: localUser ? localUser.Name : null,
+                            imageUrl: image.url,
+                            supportsImageParams: image.supportsParams,
+                        });
+                    }, onLocalUserDone);
+                }
+            }
+            var localUser;
+            if (apiClient && apiClient.getCurrentUserId()) {
+                onLocalUserDone();
+            }
+        });
+    };
+
+    self.logout = function () {
+        console.log("begin connectionManager loguot");
+        var promises = [];
+
+        for (var i = 0, length = self._apiClients.length; i < length; i++) {
+            var apiClient = self._apiClients[i];
+
+            if (apiClient.accessToken()) {
+                promises.push(logoutOfServer(apiClient));
+            }
+        }
+
+        return Promise.all(promises).then(function () {
+            var credentials = credentialProvider.credentials();
+            var servers = credentials.Servers.filter(function (u) {
+                return "Guest" !== u.UserLinkType;
+            });
+
+            for (var j = 0, numServers = servers.length; j < numServers; j++) {
+                var server = servers[j];
+                server.UserId = null;
+                server.AccessToken = null;
+                server.ExchangeToken = null;
+            }
+        });
+    };
+
+    self.getSavedServers = function () {
+        var credentials = credentialProvider.credentials();
+        var servers = credentials.Servers.slice(0);
+        servers.sort(function (a, b) {
+            return (b.DateLastAccessed || 0) - (a.DateLastAccessed || 0);
+        });
+        return servers;
+    };
+
+    self.getAvailableServers = function () {
+        console.log("Begin getAvailableServers");
+        var credentials = credentialProvider.credentials();
+        return Promise.all([findServers()]).then(function (responses) {
+            var foundServers = responses[0];
+            var servers = credentials.Servers.slice(0);
+            mergeServers(credentialProvider, servers, foundServers);
+            servers.sort(function (a, b) {
+                return (b.DateLastAccessed || 0) - (a.DateLastAccessed || 0);
+            });
+            credentials.Servers = servers;
+            credentialProvider.credentials(credentials);
+            return servers;
+        });
+    };
+
+    self.connectToServers = function (servers, options) {
+        console.log("Begin connectToServers, with " + servers.length + " servers");
+        var firstServer = servers.length ? servers[0] : null;
+
+        if (firstServer) {
+            return self.connectToServer(firstServer, options).then(function (result) {
+                if ("Unavailable" === result.State) {
+                    result.State = "ServerSelection";
+                }
+
+                console.log("resolving connectToServers with result.State: " + result.State);
+                return result;
+            });
+        }
+
+        return Promise.resolve({
+            Servers: servers,
+            State: "ServerSelection"
+        });
+    };
+
+    self.connectToServer = function (server, options) {
+        console.log("begin connectToServer");
+        return new Promise(function (resolve, reject) {
+            options = options || {};
+            tryReconnect(server).then(function (result) {
+                var serverUrl = result.url;
+                var connectionMode = result.connectionMode;
+                result = result.data;
+
+                if (1 === compareVersions$1(self.minServerVersion(), result.Version)) {
+                    console.log("minServerVersion requirement not met. Server version: " + result.Version);
+                    resolve({
+                        State: "ServerUpdateNeeded",
+                        Servers: [server]
+                    });
+                } else {
+                    if (server.Id && result.Id !== server.Id) {
+                        console.log("http request succeeded, but found a different server Id than what was expected");
+                        resolveFailure(self, resolve);
+                    } else {
+                        onSuccessfulConnection(server, result, connectionMode, serverUrl, options, resolve);
+                    }
+                }
+            }, function () {
+                resolveFailure(self, resolve);
+            });
+        });
+    };
+
+    self.connectToAddress = function (address, options) {
+        function onFail() {
+            console.log("connectToAddress " + address + " failed");
+            return Promise.resolve({
+                State: "Unavailable",
+            });
+        }
+
+        if (!address) {
+            return Promise.reject();
+        }
+
+        address = normalizeAddress(address);
+        var server = {
+            ManualAddress: address,
+            LastConnectionMode: ConnectionMode.Manual
+        };
+        return self.connectToServer(server, options).catch(onFail);
+    };
+
+    self.deleteServer = function (serverId) {
+        if (!serverId) {
+            throw new Error("null serverId");
+        }
+
+        var server = credentialProvider.credentials().Servers.filter(function (s) {
+            return s.Id === serverId;
+        });
+        server = server.length ? server[0] : null;
+        return new Promise(function (resolve, reject) {
+            function onDone() {
+                var credentials = credentialProvider.credentials();
+                credentials.Servers = credentials.Servers.filter(function (s) {
+                    return s.Id !== serverId;
+                });
+                credentialProvider.credentials(credentials);
+                resolve();
+            }
+
+            if (!server.ConnectServerId) {
+                return void onDone();
+            }
+        });
+    };
+};
+
+ConnectionManager.prototype.connect = function (options) {
+    console.log("Begin connect");
+    var instance = this;
+    return instance.getAvailableServers().then(function (servers) {
+        return instance.connectToServers(servers, options);
+    });
+};
+
+ConnectionManager.prototype.getApiClients = function () {
+    var servers = this.getSavedServers();
+
+    for (var i = 0, length = servers.length; i < length; i++) {
+        var server = servers[i];
+
+        if (server.Id) {
+            this._getOrAddApiClient(server, getServerAddress(server, server.LastConnectionMode));
+        }
+    }
+
+    return this._apiClients;
+};
+
+ConnectionManager.prototype.getApiClient = function (item) {
+    if (!item) {
+        throw new Error("item or serverId cannot be null");
+    }
+
+    if (item.ServerId) {
+        item = item.ServerId;
+    }
+
+    return this._apiClients.filter(function (a) {
+        var serverInfo = a.serverInfo();
+        return !serverInfo || serverInfo.Id === item;
+    })[0];
+};
+
+ConnectionManager.prototype.minServerVersion = function (val) {
+    if (val) {
+        this._minServerVersion = val;
+    }
+
+    return this._minServerVersion;
+};
+
+ConnectionManager.prototype.handleMessageReceived = function (msg) {
+    var serverId = msg.ServerId;
+
+    if (serverId) {
+        var apiClient = this.getApiClient(serverId);
+
+        if (apiClient) {
+            if ("string" == typeof msg.Data) {
+                try {
+                    msg.Data = JSON.parse(msg.Data);
+                } catch (err) {}
+            }
+
+            apiClient.handleMessageReceived(msg);
+        }
+    }
+};
+
+export { ConnectionManager as connectionManager };

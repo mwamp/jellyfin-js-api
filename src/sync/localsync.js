@@ -1,3 +1,7 @@
+/**
+Ok I don't get this, how does that translate?
+Plus I don't like it in an library which I would expect to be stateless?
+*/
 define(["connectionManager"], function(connectionManager) {
     "use strict";
     var isSyncing;
